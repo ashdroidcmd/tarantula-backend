@@ -1,28 +1,30 @@
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from '@prisma/client';
+
 const prisma = new PrismaClient();
 
 // POST
-exports.createData = async (req, res) => {
-  const { name, id, status, image } = req.body;
+export const createData = async (req, res) => {
+  let { name, id, status, image } = req.body;
 
-  // prisma.test.create is similar to   'INSERT INTO test (name,id,status,image) VALUES ($1,$2,$3,$4)';
   try {
-    await prisma.test.create({ //
-      data: { 
-        id, 
-        name, 
-        status, 
-        image 
+    const result = await prisma.test.create({
+      data: {
+        id: Number(id),     
+        name,
+        status,
+        image
       }
     });
-    res.send("POSTED DATA");
+
+    res.status(201).json(result);
   } catch (err) {
+    console.error("❌ Error in createData:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
 // GET all with pagination, sorting and limit
-exports.getAllData = async (req, res) => {
+export const getAllData = async (req, res) => {
   const { sortBy = "id", order = "asc", page = 1, limit = 9 } = req.query;
 
   const validSortFields = ["id", "name", "status"];
@@ -58,7 +60,7 @@ exports.getAllData = async (req, res) => {
 };
 
 // GET by ID
-exports.getDataById = async (req, res) => {
+export const getDataById = async (req, res) => {
   const id = parseInt(req.params.id);
 
   // prisma.test.findUnique is similar to "SELECT * FROM test WHERE id = $1"
@@ -72,7 +74,7 @@ exports.getDataById = async (req, res) => {
 };
 
 // UPDATE
-exports.updateData = async (req, res) => {
+export const updateData = async (req, res) => {
   const id = parseInt(req.params.id);
   const { name, status, image } = req.body;
 
@@ -89,7 +91,7 @@ exports.updateData = async (req, res) => {
 };
 
 // SEARCH
-exports.searchByName = async (req, res) => {
+export const searchByName = async (req, res) => {
   const { q } = req.query;
 
   // prisma.test.findMany is similar to "SELECT * FROM test WHERE name ILIKE '%' || $1 || '%'",
@@ -109,7 +111,7 @@ exports.searchByName = async (req, res) => {
 };
 
 // DELETE
-exports.deleteData = async (req, res) => {
+export const deleteData = async (req, res) => {
   const id = parseInt(req.params.id);
 
   // prisma.test.delete is similar to "DELETE FROM test WHERE id = $1"
@@ -120,3 +122,5 @@ exports.deleteData = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+export default { createData, getAllData, getDataById, updateData, searchByName, deleteData }

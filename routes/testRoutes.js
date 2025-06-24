@@ -1,12 +1,15 @@
-const express = require('express');
-const router = express.Router();
-const controller = require('../controllers/testControllers');
+import authMiddleware from '../middleware/authMiddleware.js';
+import express from 'express'
 
-router.post('/postData', controller.createData);
+const router = express.Router();
+
+import controller from '../controllers/testControllers.js';
+
+router.post('/postData', authMiddleware, controller.createData);
 router.get('/fetchData', controller.getAllData);
 router.get('/fetchbyID/:id', controller.getDataById);
-router.put('/update/:id', controller.updateData);
+router.put('/update/:id', authMiddleware, controller.updateData);
 router.get('/search', controller.searchByName);
-router.delete('/delete/:id', controller.deleteData);
+router.delete('/delete/:id', authMiddleware, controller.deleteData);
 
-module.exports = router;
+export default router
