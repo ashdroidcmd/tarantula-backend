@@ -14,9 +14,14 @@ app.use(express.json());
 
 // Routes
 const testRoutes = require('./routes/testRoutes');
-app.use('/', testRoutes);
+app.use('/api', testRoutes);
 
-// Server - 
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: "Route not found" });
+});
+
+// Server
 app.listen(3000, () => {
   console.log("🚀 Server is running on http://localhost:3000");
 });

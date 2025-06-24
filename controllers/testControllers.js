@@ -1,17 +1,28 @@
-const con = require('../config/db');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 // POST
-exports.createData = (req, res) => {
+exports.createData = async (req, res) => {
   const { name, id, status, image } = req.body;
-  const insert_query = 'INSERT INTO test (name,id,status,image) VALUES ($1,$2,$3,$4)';
-  con.query(insert_query, [name, id, status, image], (err) => {
-    if (err) return res.status(500).send(err);
+
+  // prisma.test.create is similar to   'INSERT INTO test (name,id,status,image) VALUES ($1,$2,$3,$4)';
+  try {
+    await prisma.test.create({ //
+      data: { 
+        id, 
+        name, 
+        status, 
+        image 
+      }
+    });
     res.send("POSTED DATA");
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-// GET All Order By name, status, id. Limit to 9 cards per page
-exports.getAllData = (req, res) => {
+// GET all with pagination, sorting and limit
+exports.getAllData = async (req, res) => {
   const { sortBy = "id", order = "asc", page = 1, limit = 9 } = req.query;
 
   const validSortFields = ["id", "name", "status"];
@@ -21,72 +32,91 @@ exports.getAllData = (req, res) => {
     return res.status(400).json({ error: "Invalid sort parameters" });
   }
 
-  const offset = (parseInt(page) - 1) * parseInt(limit);
+  const skip = (parseInt(page) - 1) * parseInt(limit);
 
-  // Count total records
-  const countQuery = "SELECT COUNT(*) FROM test";
+  // prisma.test.findMany is similar to "SELECT * FROM test
+  try {
+    const [data, total] = await Promise.all([
+      prisma.test.findMany({
+        skip,
+        take: parseInt(limit),
+        orderBy: { [sortBy]: order },
+      }),
+      prisma.test.count(),
+    ]);
 
-  con.query(countQuery, (err, countResult) => {
-    if (err) return res.status(500).send(err);
-
-    const total = parseInt(countResult.rows[0].count);
-
-    const query = `SELECT * FROM test ORDER BY ${sortBy} ${order.toUpperCase()} LIMIT $1 OFFSET $2`;
-
-    con.query(query, [parseInt(limit), offset], (err, result) => {
-      if (err) return res.status(500).send(err);
-
-      res.json({
-        data: result.rows,
-        total,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        totalPages: Math.ceil(total / limit)
-      });
+    res.json({
+      data,
+      total,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      totalPages: Math.ceil(total / limit),
     });
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-
 // GET by ID
-exports.getDataById = (req, res) => {
-  const id = req.params.id;
-  con.query("SELECT * FROM test WHERE id = $1", [id], (err, result) => {
-    if (err) return res.status(500).send(err);
-    res.send(result.rows);
-  });
+exports.getDataById = async (req, res) => {
+  const id = parseInt(req.params.id);
+
+  // prisma.test.findUnique is similar to "SELECT * FROM test WHERE id = $1"
+  try {
+    const result = await prisma.test.findUnique({ where: { id } });
+    if (!result) return res.status(404).json({ error: "Not found" });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 // UPDATE
-exports.updateData = (req, res) => {
-  const id = req.params.id;
+exports.updateData = async (req, res) => {
+  const id = parseInt(req.params.id);
   const { name, status, image } = req.body;
-  const update_query = "UPDATE test SET name = $1, status = $2, image = $3 WHERE id = $4";
-  con.query(update_query, [name, status, image, id], (err) => {
-    if (err) return res.status(500).send(err);
+
+  // prisma.test.update is similar to SQL "UPDATE test SET name = $1, status = $2, image = $3 WHERE id = $4";
+  try {
+    await prisma.test.update({ 
+      where: { id },
+      data: { name, status, image }
+    });
     res.send("UPDATED");
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 // SEARCH
 exports.searchByName = async (req, res) => {
   const { q } = req.query;
+
+  // prisma.test.findMany is similar to "SELECT * FROM test WHERE name ILIKE '%' || $1 || '%'",
   try {
-    const result = await con.query(
-      "SELECT * FROM test WHERE name ILIKE '%' || $1 || '%'",
-      [q]
-    );
-    res.json(result.rows);
+    const result = await prisma.test.findMany({
+      where: {
+        name: {
+          contains: q,
+          mode: 'insensitive'
+        }
+      }
+    });
+    res.json(result);
   } catch (err) {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
 // DELETE
-exports.deleteData = (req, res) => {
-  const id = req.params.id;
-  con.query("DELETE FROM test WHERE id = $1", [id], (err) => {
-    if (err) return res.status(500).send(err);
+exports.deleteData = async (req, res) => {
+  const id = parseInt(req.params.id);
+
+  // prisma.test.delete is similar to "DELETE FROM test WHERE id = $1"
+  try {
+    await prisma.test.delete({ where: { id } });
     res.send("DELETED");
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
