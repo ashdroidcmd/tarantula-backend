@@ -1,18 +1,9 @@
-require('dotenv').config();
-const { PrismaClient } = require('@prisma/client');
+import dotenv from 'dotenv'; 
 
+dotenv.config(); // Loads the environment variables from the env file
+
+// I use Prisma as an ORM 
+// ORM - ORM stands for Object-Relational Mapping. It's a programming technique that creates a "bridge" between object-oriented programming languages and relational databases.
+import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
-
-
-async function testPrismaConnection() {
-  try {
-    await prisma.$connect();
-    console.log('✅ Prisma connected to PostgreSQL');
-  } catch (error) {
-    console.error('❌ Prisma DB connection failed:', error);
-  }
-}
-
-testPrismaConnection();
-
-module.exports = prisma;
+export default prisma

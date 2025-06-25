@@ -1,3 +1,4 @@
+// JWT - Used to generate and verify signed tokens (usually for stateless authentication).
 import jwt from 'jsonwebtoken';
 
 const authMiddleware = (req, res, next) => {

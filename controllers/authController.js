@@ -1,9 +1,11 @@
+// bycrypt - Used to hash passwords before storing them in a database and to compare login passwords.
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+// Controllers - is a JavaScript module or function that contains the logic for handling requests and responses.
 const createToken = (userId) => {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,

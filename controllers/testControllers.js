@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
-
 const prisma = new PrismaClient();
 
+// Controllers - Controller is a JavaScript module or function that contains the logic for handling requests and responses.
 // POST
 export const createData = async (req, res) => {
   let { name, id, status, image } = req.body;
@@ -93,7 +93,6 @@ export const updateData = async (req, res) => {
 // SEARCH
 export const searchByName = async (req, res) => {
   const { q } = req.query;
-
   // prisma.test.findMany is similar to "SELECT * FROM test WHERE name ILIKE '%' || $1 || '%'",
   try {
     const result = await prisma.test.findMany({
